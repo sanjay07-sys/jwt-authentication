@@ -1,0 +1,232 @@
+{
+  "info": {
+    "_postman_id": "7a35c249-118c-4f76-9285-d8e2df80769b",
+    "name": "JWT-Authentication",
+    "description": "Postman Collection for testing complete JWT Authentication flow with HTTP-only cookies: Registration, Login, Protected Profile Route, Logout, and Unauthorized Verification.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Register",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"Registration successful response\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.message).to.eql(\"User registered successfully\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Sanjay\",\n  \"email\": \"sanjay@example.com\",\n  \"password\": \"Password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/register",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ]
+        },
+        "description": "Register a new user with name, email, and password. Password is automatically hashed using bcryptjs."
+      },
+      "response": []
+    },
+    {
+      "name": "2. Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Login successful and user profile returned without password\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.user).to.be.an(\"object\");",
+              "    pm.expect(jsonData.user.email).to.eql(\"sanjay@example.com\");",
+              "    pm.expect(jsonData.user.password).to.be.undefined;",
+              "});",
+              "pm.test(\"Token cookie set\", function () {",
+              "    pm.expect(pm.cookies.has(\"token\")).to.be.true;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"sanjay@example.com\",\n  \"password\": \"Password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Authenticate user, verify bcrypt hash, generate signed JWT, and set HTTP-only cookie."
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Protected profile returned for authenticated user\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.user).to.be.an(\"object\");",
+              "    pm.expect(jsonData.user.email).to.eql(\"sanjay@example.com\");",
+              "    pm.expect(jsonData.user.name).to.eql(\"Sanjay\");",
+              "    pm.expect(jsonData.user.password).to.be.undefined;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/user/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "profile"
+          ]
+        },
+        "description": "Access protected user profile route verified via authMiddleware using HTTP-only cookie."
+      },
+      "response": []
+    },
+    {
+      "name": "4. Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Logout success message\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(true);",
+              "    pm.expect(jsonData.message).to.eql(\"Logged out successfully\");",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/logout",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "logout"
+          ]
+        },
+        "description": "Clears HTTP-only authentication cookie on client."
+      },
+      "response": []
+    },
+    {
+      "name": "5. Get Profile After Logout",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status code is 401 Unauthorized\", function () {",
+              "    pm.response.to.have.status(401);",
+              "});",
+              "pm.test(\"Access denied after logout\", function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData.success).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/user/profile",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "user",
+            "profile"
+          ]
+        },
+        "description": "Verification that protected profile route cannot be accessed after logout cookie invalidation."
+      },
+      "response": []
+    }
+  ]
+}
